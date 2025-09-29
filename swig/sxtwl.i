@@ -60,6 +60,7 @@ class Day
 {
 public:
    static Day *fromSolar(int _year, uint8_t _month, int _day);
+   static Day *fromSolar(int _year, uint8_t _month, int _day, int _hour, int _minute, int _second);
    static Day *fromLunar(int year, uint8_t month, int day, bool isRun = false);
 private:
     Day(int d0);

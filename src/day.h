@@ -139,6 +139,17 @@ public:
         return new Day(d0);
     }
 
+    static Day *fromSolar(int _year, uint8_t _month, int _day, int _hour, int _minute, int _second)
+    {
+        Time *t = new Time();
+        t->h = _hour, t->m = _minute, t->s = _second;
+        t->Y = _year;
+        t->M = _month;
+        t->D = _day;
+        int d0 = int2(JD::toJD(*t)) - J2000;
+        return new Day(d0);
+    }
+
     static Day *fromLunar(int year, uint8_t month, int day, bool isRun = false)
     {
         Time *t = new Time();

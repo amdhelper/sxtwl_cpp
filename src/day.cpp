@@ -175,18 +175,70 @@ GZ Day::getYearGZ(bool chineseNewYearBoundary)
 
 GZ Day::getMonthGZ()
 {
-	if (this->Lmonth2 == NULL)
-	{
-		this->checkSSQ();
-		int mk = int2((this->d0 - SSQPtr->ZQ[0]) / 30.43685);
-		//相对大雪的月数计算,mk的取值范围0-12
-		if (mk < 12 && this->d0 >= SSQPtr->ZQ[2 * mk + 1])
-			mk++;
-		//相对于1998年12月7(大雪)的月数,900000为正数基数
-		int D = mk + int2((SSQPtr->ZQ[12] + 390) / 365.2422) * 12 + 900000;
-		this->Lmonth2 = new GZ(D % 10, D % 12);
-	}
-	return *(this->Lmonth2);
+    if (this->Lmonth2 == NULL)
+    {
+        // Ensure solar terms for the current date's year are loaded.
+        this->checkSSQ();
+
+        // Correct mapping of BaZi Month's Earthly Branch (地支) to the starting Solar Term (节) index in ZQ.
+        // ZQ array indices: 1:小寒, 3:立春, 5:惊蛰, 7:清明, 9:立夏, 11:芒种, 13:小暑, 15:立秋, 17:白露, 19:寒露, 21:立冬, 23:大雪
+        const int BAZI_MONTH_MAP[12][2] = {
+            {23, 0},  // 子月 (Zi, dz=0) starts at 大雪 (Daxue, ZQ[23])
+            {21, 11}, // 亥月 (Hai, dz=11) starts at 立冬 (Lidong, ZQ[21])
+            {19, 10}, // 戌月 (Xu, dz=10) starts at 寒露 (Hanlu, ZQ[19])
+            {17, 9},  // 酉月 (You, dz=9) starts at 白露 (Bailu, ZQ[17])
+            {15, 8},  // 申月 (Shen, dz=8) starts at 立秋 (Liqiu, ZQ[15])
+            {13, 7},  // 未月 (Wei, dz=7) starts at 小暑 (Xiaoshu, ZQ[13])
+            {11, 6},  // 午月 (Wu, dz=6) starts at 芒种 (Mangzhong, ZQ[11])
+            {9, 5},   // 巳月 (Si, dz=5) starts at 立夏 (Lixia, ZQ[9])
+            {7, 4},   // 辰月 (Chen, dz=4) starts at 清明 (Qingming, ZQ[7])
+            {5, 3},   // 卯月 (Mao, dz=3) starts at 惊蛰 (Jingzhe, ZQ[5])
+            {3, 2},   // 寅月 (Yin, dz=2) starts at 立春 (Lichun, ZQ[3])
+            {1, 1}    // 丑月 (Chou, dz=1) starts at 小寒 (Xiaohan, ZQ[1])
+        };
+
+        int month_dz_index = 1; // Default to Chou month of the current year
+
+        // Iterate through the solar terms of the current year from latest to earliest.
+        for (int i = 0; i < 12; ++i) {
+            int jie_qi_index = BAZI_MONTH_MAP[i][0];
+            if (this->d0 >= SSQPtr->ZQ[jie_qi_index]) {
+                month_dz_index = BAZI_MONTH_MAP[i][1];
+                goto found_month;
+            }
+        }
+
+        // If not found, the date must be in a month that started in the previous year (e.g., Jan is in last year's Chou month).
+        // Load previous year's solar term data.
+        SSQPtr->calcY(this->d0 - 365);
+        
+        // We only need to check for Daxue (start of Zi month) from the previous year.
+        // If it's earlier than that, it would have been caught by the loop above (e.g. Xiaohan).
+        if (this->d0 >= SSQPtr->ZQ[23]) {
+            month_dz_index = 0; // Zi month
+        }
+        // Restore SSQ state for subsequent calculations
+        SSQPtr->calcY(this->d0);
+
+    found_month:
+        // 2. 确定月柱天干 (Heavenly Stem) - 使用五虎遁
+        GZ yearGZ = this->getYearGZ(false); // false 表示以立春为界
+        uint8_t year_tg = yearGZ.tg;
+
+        uint8_t start_tg_index;
+        if (year_tg == 0 || year_tg == 5) start_tg_index = 2; // 甲/己 -> 丙
+        else if (year_tg == 1 || year_tg == 6) start_tg_index = 4; // 乙/庚 -> 戊
+        else if (year_tg == 2 || year_tg == 7) start_tg_index = 6; // 丙/辛 -> 庚
+        else if (year_tg == 3 || year_tg == 8) start_tg_index = 8; // 丁/壬 -> 壬
+        else start_tg_index = 0; // 戊/癸 -> 甲
+
+        // The month order starts from Yin (寅) as the first month (index 0).
+        int month_order_index = (month_dz_index - 2 + 12) % 12;
+        uint8_t month_tg_index = (start_tg_index + month_order_index) % 10;
+
+        this->Lmonth2 = new GZ(month_tg_index, month_dz_index);
+    }
+    return *(this->Lmonth2);
 }
 
 GZ Day::getDayGZ()

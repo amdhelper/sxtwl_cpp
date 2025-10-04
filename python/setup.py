@@ -84,7 +84,7 @@ sxtwl_module = setuptools.Extension('_sxtwl',
 
 
 setuptools.setup(
-    name="sxtwl",
+    name="sxtwl_custom",
     version="2.0.7",
     author="yuangu",
     author_email="seantone@126.com",
@@ -96,6 +96,6 @@ setuptools.setup(
     url="https://github.com/yuangu/sxtwl_cpp",
     packages=setuptools.find_packages(), 
     ext_modules = [sxtwl_module],
-    py_modules = ["sxtwl"],  
+    py_modules = ["sxtwl_custom"],  
     
 )

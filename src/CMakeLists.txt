@@ -15,8 +15,17 @@ elseif(MSVC)
 endif()
 
 ### 支持sxtwl生成dll的格式
+
 if(SXTWL_SHARED)
+
     add_library(sxtwl SHARED ${SRC_FILES})
+
 else(SXTWL_SHARED)
+
     add_library(sxtwl STATIC ${SRC_FILES})
+
 endif(SXTWL_SHARED)
+
+
+
+set_target_properties(sxtwl PROPERTIES POSITION_INDEPENDENT_CODE ON)

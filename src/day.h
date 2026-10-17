@@ -130,28 +130,28 @@ public:
 public:
     static Day *fromSolar(int _year, uint8_t _month, int _day)
     {
-        Time *t = new Time();
-        t->h = 12, t->m = 0, t->s = 0.1;
-        t->Y = _year;
-        t->M = _month;
-        t->D = _day;
-        int d0 = int2(JD::toJD(*t)) - J2000;
+        Time t;
+        t.h = 12, t.m = 0, t.s = 0.1;
+        t.Y = _year;
+        t.M = _month;
+        t.D = _day;
+        int d0 = int2(JD::toJD(t)) - J2000;
         return new Day(d0);
     }
 
     static Day *fromLunar(int year, uint8_t month, int day, bool isRun = false)
     {
-        Time *t = new Time();
-        t->h = 12, t->m = 0, t->s = 0.1;
-        t->Y = year;
-        t->M = 1;
-        t->D = 1;
+        Time t;
+        t.h = 12, t.m = 0, t.s = 0.1;
+        t.Y = year;
+        t.M = 1;
+        t.D = 1;
         if (month > 10)
         {
-            t->Y = year + 1;
+            t.Y = year + 1;
         }
 
-        int Bd0 = int2(JD::toJD(*t)) - J2000;
+        int Bd0 = int2(JD::toJD(t)) - J2000;
         if (!SSQPtr->ZQ.size() || Bd0 < SSQPtr->ZQ[0] || Bd0 >= SSQPtr->ZQ[24])
         {
             SSQPtr->calcY(Bd0);
